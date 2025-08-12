@@ -1,0 +1,31 @@
+---
+- name: Backup SQL Server database on Windows
+  hosts: sql_servers_windows
+  gather_facts: no
+  vars:
+    sql_instance: "MSSQLSERVER"       # Change if using named instance
+    database_name: "YourDatabase"     # Change to your database name
+    backup_path: "C:\\Backups"        # Folder to save backup files (ensure it exists or create it)
+    backup_file: "{{ backup_path }}\\{{ database_name }}_backup_{{ ansible_date_time.iso8601_basic }}.bak"
+
+  tasks:
+    - name: Ensure backup directory exists
+      ansible.windows.win_file:
+        path: "{{ backup_path }}"
+        state: directory
+
+    - name: Backup SQL Server database
+      ansible.windows.win_shell: |
+        sqlcmd -S .\{{ sql_instance }} -Q "BACKUP DATABASE [{{ database_name }}] TO DISK='{{ backup_file }}' WITH INIT"
+      args:
+        executable: powershell.exe
+
+    - name: Verify backup file created
+      ansible.windows.win_stat:
+        path: "{{ backup_file }}"
+      register: backup_file_info
+
+    - name: Fail if backup file was not created
+      ansible.builtin.fail:
+        msg: "Backup file was not created at {{ backup_file }}"
+      when: not backup_file_info.stat.exists
