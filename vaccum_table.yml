@@ -1,6 +1,6 @@
 ---
 #playbook for grand privileges in a particular Database
-- hosts: postgresdbs
+- hosts: server
   gather_facts: true
   vars_prompt:
   - name: table_name
