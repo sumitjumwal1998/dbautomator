@@ -7,12 +7,13 @@
     prompt: Enter table name to run vacuum on table
     private: no
   tasks:
-  - name: Run sql query on postgres
-    shell: psql -c "VACCUM {{ table_name }};"
-    register: op
-    ignore_errors: true
-  - name: print
-      ansible.builtin.debug:
-        var: table_name
+  - name: Run VACUUM on the specified table
+    community.postgresql.postgresql_query:
+    db: postgres
+    login_user: postgres
+    login_password: Wednesday@12
+    query: "VACUUM {{ table_name | quote }};"
+  register: vacuum_result
+  ignore_errors: true
   - debug:
       var: op
