@@ -4,7 +4,9 @@
 
   vars:
     db_name: postgres
-
+    login_user: postgres
+    login_password: "{{ postgres_password }}
+ 
   tasks:
     - name: Ensure psycopg2 library is installed for Python
       ansible.builtin.apt:
@@ -14,8 +16,6 @@
     - name: run sql
       postgresql_query:
         db: "{{ db_name }}"
-        login_user: postgres
-        login_password: Wednesday@12
         query: >
           select pid as process_id,
                  usename as username,
