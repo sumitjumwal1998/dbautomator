@@ -1,0 +1,16 @@
+---
+#playbook for grand privileges in a particular Database
+- hosts: postgresdbs
+  gather_facts: true
+  vars_prompt:
+  - name: table_name
+    prompt: Enter table name to run vacuum on table
+    private: no
+    default:
+  tasks:
+  - name: Run sql query on postgres
+    shell: psql -c "vacuum {{ table_name }};"
+    register: op
+    ignore_errors: true
+  - debug:
+      var: op
