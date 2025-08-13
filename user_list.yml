@@ -1,14 +1,31 @@
-- name: List of users/roles
+- name: All session check on server.
   hosts: server
+  become: true # Add this to ensure you have permissions to install packages
 
   vars:
     db_name: postgres
+
   tasks:
+    - name: Ensure psycopg2 library is installed for Python
+      ansible.builtin.apt:
+        name: python3-psycopg2 # Use the apt package name for psycopg2
+        state: present
+
     - name: run sql
       postgresql_query:
         db: "{{ db_name }}"
-        query: SELECT rolname FROM pg_roles
+        query: >
+          select pid as process_id,
+                 usename as username,
+                 datname as database_name,
+                 client_addr as client_address,
+                 application_name,
+                 backend_start,
+                 state,
+                 state_change
+          from pg_stat_activity
       register: sql_data
+      
     - name: print
       ansible.builtin.debug:
         var: sql_data
