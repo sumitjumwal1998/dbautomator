@@ -1,5 +1,5 @@
 - name: List of users/roles
-  hosts: host1
+  hosts: server
 
   vars:
     db_name: postgres
