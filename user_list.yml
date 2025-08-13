@@ -37,4 +37,6 @@
     - name: Print login password (not safe for production)
       ansible.builtin.debug:
         var: login_password
-
+    - name: Print login password (not safe for production)
+      ansible.builtin.debug:
+        var: login_password
