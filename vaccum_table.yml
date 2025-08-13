@@ -13,5 +13,3 @@
     query: "VACUUM {{ table_name | quote }};"
   register: vacuum_result
   ignore_errors: true
-  - debug:
-      var: op
