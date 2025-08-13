@@ -7,7 +7,7 @@
     - name: run sql
       postgresql_query:
         login_user: postgres
-        login_password: Wednesday@1
+        login_password: Wednesday@12
         db: "{{ db_name }}"
         query: SELECT rolname FROM pg_roles
       register: sql_data
