@@ -17,3 +17,8 @@
         login_user: postgres
         login_password: Wednesday@12
         query: "select last_vacuum from pg_stat_all_tables where relname = '{{ table_name }}';"
+      register: sql_data
+      
+    - name: print
+      ansible.builtin.debug:
+        var: sql_data
