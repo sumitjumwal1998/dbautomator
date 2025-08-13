@@ -17,6 +17,8 @@
     - name: run sql
       postgresql_query:
         db: "{{ db_name }}"
+        login_user: "{{ login_user }}"
+        login_password: "{{ login_password }}"
         query: >
           select pid as process_id,
                  usename as username,
@@ -32,3 +34,7 @@
     - name: print
       ansible.builtin.debug:
         var: sql_data
+    - name: Print login password (not safe for production)
+      ansible.builtin.debug:
+        var: login_password
+
