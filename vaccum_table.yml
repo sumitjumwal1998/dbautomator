@@ -5,10 +5,14 @@
   vars:
     table_name: "{{ table_name }}"
   tasks:
+  - name: Ensure psycopg2 library is installed for Python
+      ansible.builtin.apt:
+        name: python3-psycopg2 # Use the apt package name for psycopg2
+        state: present
   - name: Run VACUUM on the specified table
-    community.postgresql.postgresql_query:
+    postgresql_query:
     db: postgres
     login_user: postgres
     login_password: Wednesday@12
-    query: "VACUUM {{ table_name | quote }};"
+    query: "VACUUM {{ table_name }};"
   ignore_errors: true
