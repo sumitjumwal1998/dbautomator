@@ -5,7 +5,7 @@
   vars:
     db_name: "{{ DATABASENAME }}"
     login_user: postgres
-    login_password: "{{ postgres_password }}
+    login_password: "{{ postgres_password }}"
 
  
   tasks:
