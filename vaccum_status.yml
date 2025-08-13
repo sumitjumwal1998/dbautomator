@@ -1,0 +1,19 @@
+---
+#playbook for grand privileges in a particular Database
+- hosts: server
+  gather_facts: true
+  vars:
+    table_name: "{{ table_name }}"
+  
+  
+  tasks:
+    - name: Ensure psycopg2 library is installed for Python
+      ansible.builtin.apt:
+        name: python3-psycopg2 # Use the apt package name for psycopg2
+        state: present
+    - name: Run to get vacccum status of specified table 
+      postgresql_query:
+        db: postgres
+        login_user: postgres
+        login_password: Wednesday@12
+        query: "select last_vacuum from pg_stat_all_tables where relname = {{ table_name }};"
