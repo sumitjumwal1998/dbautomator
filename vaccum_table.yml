@@ -1,18 +1,22 @@
 ---
 #playbook for grand privileges in a particular Database
 - hosts: server
+  become: true # Add this to ensure you have permissions to install packages
   gather_facts: true
+  
+  
   vars:
     table_name: "{{ table_name }}"
+  
+  
   tasks:
     - name: Ensure psycopg2 library is installed for Python
-        ansible.builtin.apt:
-          name: python3-psycopg2 # Use the apt package name for psycopg2
-          state: present
+      ansible.builtin.apt:
+        name: python3-psycopg2 # Use the apt package name for psycopg2
+        state: present
     - name: Run VACUUM on the specified table
       postgresql_query:
-      db: postgres
-      login_user: postgres
-      login_password: Wednesday@12
-      query: "VACUUM {{ table_name }};"
-      ignore_errors: true
+        db: postgres
+        login_user: postgres
+        login_password: Wednesday@12
+        query: "VACUUM {{ table_name }};"
