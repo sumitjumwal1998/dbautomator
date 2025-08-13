@@ -6,7 +6,7 @@
   tasks:
     - name: run sql
       postgresql_query:
-        login_username: postgres
+        login_user: postgres
         login_password: Wednesday@1
         db: "{{ db_name }}"
         query: SELECT rolname FROM pg_roles
