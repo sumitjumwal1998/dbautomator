@@ -3,7 +3,7 @@
 - hosts: server
   gather_facts: true
   vars:
-  - name:"{{ table_name }}"
+    table_name: "{{ table_name }}"
   tasks:
   - name: Run VACUUM on the specified table
     community.postgresql.postgresql_query:
