@@ -2,10 +2,8 @@
 #playbook for grand privileges in a particular Database
 - hosts: server
   gather_facts: true
-  vars_prompt:
-  - name: table_name
-    prompt: Enter table name to run vacuum on table
-    private: no
+  vars:
+  - name:"{{ table_name }}"
   tasks:
   - name: Run VACUUM on the specified table
     community.postgresql.postgresql_query:
