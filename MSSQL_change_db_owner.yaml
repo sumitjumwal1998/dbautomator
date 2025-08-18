@@ -1,0 +1,19 @@
+- name: Change DB Owner on multiple SQL servers
+  hosts: MSSQL_DB_Inven
+  gather_facts: no
+
+  vars:
+    sa_username: "{{ username }}"
+    sa_password: "{{ password }}"
+    source_DB_name: "{{ DatabaseName }}"
+    new_dbowner_name: "{{ NewOwner }}"
+
+  tasks:
+    - name: Change DB owner using SQL query
+      community.windows.win_sql_query:
+        server: "{{ inventory_hostname }}"
+        login_user: "{{ sa_username }}"
+        login_password: "{{ sa_password }}"
+        query: |
+          USE [{{ source_DB_name }}];
+          EXEC sp_changedbowner '{{ new_dbowner_name }}';
