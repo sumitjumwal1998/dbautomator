@@ -1,5 +1,5 @@
 - name: Change DB Owner on multiple SQL servers
-  hosts: MSSQL_DB_Inven
+  hosts: DEV_SQL
   gather_facts: no
 
   vars:
