@@ -3,9 +3,9 @@
   become: true # Add this to ensure you have permissions to install packages
 
   vars:
-    db_name: postgres
+    db_name: "{{ DATABASENAME }}"
     login_user: postgres
-    login_password: Wednesday@12
+    login_password: "{{ login_password_var }}"
 
  
   tasks:
