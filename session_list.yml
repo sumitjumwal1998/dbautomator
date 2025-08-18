@@ -34,9 +34,3 @@
     - name: print
       ansible.builtin.debug:
         var: sql_data
-    - name: Print login password (not safe for production)
-      ansible.builtin.debug:
-        var: login_password
-    - name: Print login password (not safe for production)
-      ansible.builtin.debug:
-        var: DATABASENAME
