@@ -3,7 +3,7 @@
   become: true # Add this to ensure you have permissions to install packages
 
   vars:
-    db_name: "{{ DATABASENAME }}"
+    db_name: postgres
     login_user: postgres
     login_password: Wednesday@12
 
