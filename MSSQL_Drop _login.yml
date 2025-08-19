@@ -1,0 +1,19 @@
+- name: DROP SQL logins
+  hosts: DEV_SQL
+  gather_facts: no
+
+  vars:
+    sa_username: "{{ username }}"
+    sa_password: "{{ password }}"
+    sql_login: "{{ login_to_drop }}"
+
+    
+  tasks:
+      
+     - name: Drop SQL Login
+       win_shell: |
+               $SQLLogin= "DROP LOGIN {{ sql_login }}"
+               Invoke-Sqlcmd -U {{ sa_username }} -P {{ sa_password }} -Query $SQLLogin
+
+
+
