@@ -9,7 +9,6 @@
       sa_password: "{{ password }}"
       source_DB_name: "{{ DatabaseName }}"
       backup_path: 'c:\backup\'
-      new_dbowner_name: "{{ NewOwner }}"
         
     tasks:
        - name: DB Backup
