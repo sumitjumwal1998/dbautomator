@@ -1,0 +1,18 @@
+---
+# backup and restore Tasks
+  - name: Backup Database
+    hosts: DEV_SQL
+    gather_facts: no
+
+    vars:
+      sa_username: "{{ username }}"
+      sa_password: "{{ password }}"
+      source_DB_name: "{{ DatabaseName }}"
+      backup_path: 'c:\backup\'
+      new_dbowner_name: "{{ NewOwner }}"
+        
+    tasks:
+       - name: DB Backup
+         win_shell: |
+          $Backup = "BACKUP DATABASE {{ source_database_name }} TO DISK ='{{ backup_path }} {{ source_database_name }}-full.bak'"
+          Invoke-SqlCmd -U {{ sa_username }} -P {{ sa_password }} -Query $Backup -TrustServerCertificate
