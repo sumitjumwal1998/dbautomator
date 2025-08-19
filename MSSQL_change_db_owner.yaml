@@ -15,4 +15,4 @@
         USE [{{ source_DB_name }}];
         EXEC sp_changedbowner '{{ new_dbowner_name }}';
         "@
-        Invoke-Sqlcmd -ServerInstance "{{ inventory_hostname }}" -Username "{{ sa_username }}" -Password "{{ sa_password }}" -Query $query
+        Invoke-Sqlcmd -ServerInstance "{{ inventory_hostname }}" -Username "{{ sa_username }}" -Password "{{ sa_password }}" -Query $query -TrustServerCertificate
