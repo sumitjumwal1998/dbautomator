@@ -6,8 +6,9 @@
     sql_service_name: MSSQLSERVER  # Default SQL Server instance; adjust for named instances
     patch_dest_path: c:\\SQL\\patches
     sa_username: "{{ username }}"
-    sa_password: "{{ password }}" 
-    
+    sa_password: "{{ password }}"
+
+  tasks:
     - name: Stop SQL Server service before patching
       win_service:
         name: "{{ sql_service_name }}"
@@ -49,4 +50,3 @@
     - name: Display SQL Server version
       debug:
         msg: "SQL Server version: {{ sql_version.stdout }}"
----
