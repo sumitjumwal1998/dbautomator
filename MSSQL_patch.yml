@@ -1,0 +1,49 @@
+---
+- name: Apply latest SQL Server patch from network directory
+  hosts: sql_servers
+  gather_facts: true
+  vars:
+    sql_service_name: MSSQLSERVER  # Default SQL Server instance; adjust for named instances
+    patch_dest_path: c:\\SQL\\patches
+    - name: Stop SQL Server service before patching
+      win_service:
+        name: "{{ sql_service_name }}"
+        state: stopped
+      ignore_errors: yes  # Continue if service is already stopped
+
+    - name: Install SQL Server patch
+      win_package:
+        path: "{{ patch_dest_path }}"
+        arguments: /quiet /allinstances /IAcceptSQLServerLicenseTerms
+        state: present
+      register: patch_install
+
+    - name: Check if reboot is required
+      win_shell: |
+        $reboot = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired" -ErrorAction SilentlyContinue)
+        if ($reboot) { exit 1 } else { exit 0 }
+      register: reboot_check
+      failed_when: false
+
+    - name: Reboot server if required
+      win_reboot:
+        reboot_timeout: 600
+      when: reboot_check.rc == 1 or patch_install.reboot_required | default(false)
+
+    - name: Ensure SQL Server service is running
+      win_service:
+        name: "{{ sql_service_name }}"
+        state: started
+      register: service_result
+      retries: 3
+      delay: 5
+      until: service_result.state == 'running'
+
+    - name: Check SQL Server version post-patch
+      win_shell: sqlcmd -S . -Q "SELECT @@VERSION" -
+      register: sql_version
+
+    - name: Display SQL Server version
+      debug:
+        msg: "SQL Server version: {{ sql_version.stdout }}"
+---
