@@ -6,7 +6,7 @@
     sql_service_name: MSSQLSERVER  # Default SQL Server instance; adjust for named instances
     patch_dest_path: c:\\SQL\\patches
     sa_username: "{{ username }}"
-    sa_password: "{{ password }}"
+    sa_password: "{{ password }}" 
     
     - name: Stop SQL Server service before patching
       win_service:
