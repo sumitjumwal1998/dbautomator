@@ -1,6 +1,6 @@
 ---
 - name: Apply latest SQL Server patch from network directory
-  hosts: sql_servers
+  hosts: DEV_SQL
   gather_facts: true
   vars:
     sql_service_name: MSSQLSERVER  # Default SQL Server instance; adjust for named instances
