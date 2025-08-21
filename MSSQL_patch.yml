@@ -15,9 +15,14 @@
         state: stopped
       ignore_errors: yes  # Continue if service is already stopped
 
+    - name: Get the patch file name from the folder
+      win_shell: |
+        Get-ChildItem -Path "{{ patch_dest_path }}" -File | Select-Object -First 1 | ForEach-Object { $_.FullName }
+      register: patch_file
+
     - name: Install SQL Server patch
       win_package:
-        path: "{{ patch_dest_path }}"
+        path: "{{ patch_file.stdout }}"
         arguments: /quiet /allinstances /IAcceptSQLServerLicenseTerms
         state: present
       register: patch_install
