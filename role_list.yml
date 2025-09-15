@@ -3,11 +3,13 @@
 
   vars:
     db_name: postgres
+    login_user: "{{ user }}"
+    login_password: "{{ login_password_var }}"
   tasks:
     - name: run sql
       postgresql_query:
-        login_user: postgres
-        login_password: Wednesday@12
+        login_user: "{{ login_user }}"
+        login_password: "{{ login_password }}"
         db: "{{ db_name }}"
         query: SELECT rolname FROM pg_roles
       register: sql_data
