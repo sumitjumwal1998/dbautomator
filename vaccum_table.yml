@@ -7,6 +7,9 @@
   
   vars:
     table_name: "{{ table_name }}"
+    db_name: "{{ DATABASENAME }}"
+    login_user: "{{ user }}"
+    login_password: "{{ login_password_var }}"
   
   
   tasks:
@@ -16,8 +19,8 @@
         state: present
     - name: Run VACUUM on the specified table
       postgresql_query:
-        db: postgres
-        login_user: postgres
-        login_password: Wednesday@12
+        db: "{{ db_name }}"
+        login_user: "{{ login_user }}"
+        login_password: "{{ login_password }}"
         query: "VACUUM {{ table_name }};"
         autocommit: True
