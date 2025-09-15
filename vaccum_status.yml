@@ -4,6 +4,9 @@
   gather_facts: true
   vars:
     table_name: "{{ table_name }}"
+    db_name: "{{ DATABASENAME }}"
+    login_user: "{{ user }}"
+    login_password: "{{ login_password_var }}"
   
   
   tasks:
@@ -13,9 +16,9 @@
         state: present
     - name: Run to get vacccum status of specified table 
       postgresql_query:
-        db: postgres
-        login_user: postgres
-        login_password: Wednesday@12
+        db: "{{ db_name }}"
+        login_user: "{{ login_user }}"
+        login_password: "{{ login_password }}"
         query: "select last_vacuum from pg_stat_all_tables where relname = '{{ table_name }}';"
       register: sql_data
       
