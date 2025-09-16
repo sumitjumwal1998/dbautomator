@@ -14,4 +14,4 @@
        - name: DB Backup
          win_shell: |
           $Backup = "BACKUP DATABASE {{ source_DB_name }} TO DISK ='{{ backup_path }} {{ source_DB_name }}-full.bak'"
-          Invoke-SqlCmd -U {{ sa_username }} -P {{ sa_password }} -Query $Backup -TrustServerCertificate
+          Invoke-SqlCmd -U {{ sa_username }} -P {{ sa_password }} -Query $Backup
