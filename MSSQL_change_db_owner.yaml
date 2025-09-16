@@ -16,3 +16,7 @@
         EXEC sp_changedbowner '{{ new_dbowner_name }}';
         "@
         Invoke-Sqlcmd -ServerInstance "{{ inventory_hostname }}" -Username "{{ sa_username }}" -Password "{{ sa_password }}" -Query $query
+    - name: Show a popup-like message
+      ansible.builtin.debug:
+        msg: "⚠️  Database owner Changed successfully!"
+
