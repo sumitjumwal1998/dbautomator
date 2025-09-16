@@ -13,7 +13,7 @@
      - name: Drop SQL Login
        win_shell: |
                $SQLLogin= "DROP LOGIN {{ sql_login }}"
-               Invoke-Sqlcmd -U {{ sa_username }} -P {{ sa_password }} -Query $SQLLogin -TrustServerCertificate
+               Invoke-Sqlcmd -U {{ sa_username }} -P {{ sa_password }} -Query $SQLLogin
 
 
 
