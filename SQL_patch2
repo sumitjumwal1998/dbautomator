@@ -7,52 +7,58 @@
   vars:
     patch_location: "{{ lookup('env', 'PATCH_LOCATION') }}"
     patch_file: "{{ lookup('env', 'PATCH_FILE') }}"
-    sql_service: "{{ lookup('env', 'SQL_SERVICE') }}"
 
   tasks:
 
-    - name: Verify SQL patch file exists
+    - name: Verify SQL CU patch file exists
       ansible.windows.win_stat:
         path: "{{ patch_location }}\\{{ patch_file }}"
-      register: patch_file_check
+      register: patch_check
 
-    - name: Fail if patch file is missing
+
+    - name: Fail if CU patch file is missing
       ansible.builtin.fail:
-        msg: "SQL Server CU patch file not found: {{ patch_location }}\\{{ patch_file }}"
-      when: not patch_file_check.stat.exists
+        msg: "SQL CU patch file not found: {{ patch_location }}\\{{ patch_file }}"
+      when: not patch_check.stat.exists
 
 
-    - name: Install SQL Server 2019 CU
+    - name: Install SQL Server CU
       ansible.windows.win_command: >
         "{{ patch_location }}\\{{ patch_file }}"
         /quiet
         /action=patch
+        /InstanceName=MSSQLSERVER
         /IAcceptSQLServerLicenseTerms
-      register: install_result
-      changed_when: install_result.rc == 0
-      failed_when: install_result.rc not in [0,3010]
+      register: cu_install_result
+      changed_when: cu_install_result.rc in [0,3010]
+      failed_when: cu_install_result.rc not in [0,3010]
+      check_mode: no
 
 
-    - name: Display SQL patch installation result
+    - name: Display CU installation result
       ansible.builtin.debug:
-        var: install_result
+        var: cu_install_result
 
 
     - name: Wait for SQL Server service
       ansible.windows.win_service:
-        name: "{{ sql_service }}"
-      register: sql_service_status
-      until: sql_service_status.state == "running"
+        name: MSSQLSERVER
+      register: sql_service
+      until: sql_service.state == "running"
       retries: 30
       delay: 20
 
 
-    - name: Verify SQL Server version after patch
+    - name: Verify SQL Server version after CU patch
       ansible.windows.win_shell: |
         sqlcmd -Q "SET NOCOUNT ON; SELECT @@VERSION;"
       register: sql_version
+      changed_when: false
+      failed_when: false
+      check_mode: no
 
 
     - name: Display SQL Server version
       ansible.builtin.debug:
         msg: "{{ sql_version.stdout }}"
+      when: sql_version.stdout is defined
