@@ -5,8 +5,8 @@
   serial: 1
 
   vars:
-    databases: "{{ lookup('env', 'DATABASES') }}"
-    new_owner: "{{ lookup('env', 'NEW_OWNER') }}"
+    databases: "{{ DATABASES }}"
+    new_owner: "{{ NEW_OWNER }}"
 
   tasks:
 
