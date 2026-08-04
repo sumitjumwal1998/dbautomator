@@ -1,79 +1,64 @@
 ---
-- name: Install SQL Server 2019
+- name: Install SQL Server 2019 using ConfigurationFile.ini
   hosts: mssql
   gather_facts: false
   serial: 1
 
   vars:
     sql_setup_path: "{{ lookup('env', 'SQL_SETUP_PATH') }}"
-    sql_instance_name: "{{ lookup('env', 'SQL_INSTANCE_NAME') }}"
-    sql_service_account: "{{ lookup('env', 'SQL_SERVICE_ACCOUNT') }}"
-    sql_sysadmin_account: "{{ lookup('env', 'SQL_SYSADMIN_ACCOUNT') }}"
-    sql_install_dir: "{{ lookup('env', 'SQL_INSTALL_DIR') }}"
-    sql_data_dir: "{{ lookup('env', 'SQL_DATA_DIR') }}"
-    sql_log_dir: "{{ lookup('env', 'SQL_LOG_DIR') }}"
-    sql_tempdb_dir: "{{ lookup('env', 'SQL_TEMPDB_DIR') }}"
-
+    sql_configuration_file: "{{ lookup('env', 'SQL_CONFIGURATION_FILE') }}"
 
   tasks:
 
     - name: Verify SQL Server setup exists
       ansible.windows.win_stat:
         path: "{{ sql_setup_path }}"
-      register: setup_check
+      register: setup_file
 
-
-    - name: Fail if SQL setup is missing
+    - name: Fail if setup.exe is missing
       ansible.builtin.fail:
-        msg: "SQL Server setup not found at {{ sql_setup_path }}"
-      when: not setup_check.stat.exists
+        msg: "SQL Server setup.exe not found: {{ sql_setup_path }}"
+      when: not setup_file.stat.exists
 
+    - name: Verify configuration file exists
+      ansible.windows.win_stat:
+        path: "{{ sql_configuration_file }}"
+      register: config_file
 
-    - name: Install SQL Server 2019
+    - name: Fail if configuration file is missing
+      ansible.builtin.fail:
+        msg: "Configuration file not found: {{ sql_configuration_file }}"
+      when: not config_file.stat.exists
+
+    - name: Install SQL Server
       ansible.windows.win_command: >
         "{{ sql_setup_path }}"
-        /Q
-        /ACTION=INSTALL
-        /FEATURES=SQLENGINE
-        /INSTANCENAME={{ sql_instance_name }}
-        /SQLSVCACCOUNT="{{ sql_service_account }}"
-        /SQLSYSADMINACCOUNTS="{{ sql_sysadmin_account }}"
-        /SECURITYMODE=SQL
-        /SAPWD="{{ lookup('env','SQL_SA_PASSWORD') }}"
-        /INSTALLSQLDATADIR="{{ sql_install_dir }}"
-        /SQLUSERDBDIR="{{ sql_data_dir }}"
-        /SQLUSERDBLOGDIR="{{ sql_log_dir }}"
-        /SQLTEMPDBDIR="{{ sql_tempdb_dir }}"
-        /SQLTEMPDBLOGDIR="{{ sql_tempdb_dir }}"
+        /ConfigurationFile="{{ sql_configuration_file }}"
         /IACCEPTSQLSERVERLICENSETERMS
       register: sql_install_result
-      changed_when: sql_install_result.rc in [0,3010]
-      failed_when: sql_install_result.rc not in [0,3010]
+      changed_when: sql_install_result.rc in [0, 3010]
+      failed_when: sql_install_result.rc not in [0, 3010]
       check_mode: no
 
-
-    - name: Display SQL installation result
+    - name: Display installation result
       ansible.builtin.debug:
         var: sql_install_result
 
-
-    - name: Verify SQL Server service
+    - name: Verify SQL Server service is running
       ansible.windows.win_service:
-        name: "MSSQL${{ sql_instance_name }}"
-      register: sql_service_status
-      until: sql_service_status.state == "running"
+        name: MSSQLSERVER
+      register: sql_service
+      until: sql_service.state == "running"
       retries: 30
       delay: 20
 
-
-    - name: Verify SQL Server installation
+    - name: Verify SQL Server version
       ansible.windows.win_shell: |
-        sqlcmd -Q "SELECT @@VERSION"
+        sqlcmd -Q "SET NOCOUNT ON; SELECT @@VERSION;"
       register: sql_version
       check_mode: no
 
-
-    - name: Display SQL Version
+    - name: Display SQL Server version
       ansible.builtin.debug:
         msg: "{{ sql_version.stdout }}"
       when: sql_version.stdout is defined
