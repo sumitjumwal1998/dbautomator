@@ -1,0 +1,68 @@
+---
+- name: Uninstall SQL Server 2019
+  hosts: mssql
+  gather_facts: false
+  serial: 1
+
+  vars:
+    sql_setup_path: "{{ lookup('env', 'SQL_SETUP_PATH') }}"
+    sql_instance_name: "{{ lookup('env', 'SQL_INSTANCE_NAME') }}"
+
+  tasks:
+
+    - name: Verify SQL Server setup exists
+      ansible.windows.win_stat:
+        path: "{{ sql_setup_path }}"
+      register: setup_file
+
+    - name: Fail if setup.exe is missing
+      ansible.builtin.fail:
+        msg: "SQL Server setup.exe not found: {{ sql_setup_path }}"
+      when: not setup_file.stat.exists
+
+
+    - name: Check SQL Server service
+      ansible.windows.win_service:
+        name: "{{ 'MSSQLSERVER' if sql_instance_name == 'MSSQLSERVER' else 'MSSQL$' + sql_instance_name }}"
+      register: sql_service
+      failed_when: false
+
+
+    - name: Stop SQL Server service
+      ansible.windows.win_service:
+        name: "{{ 'MSSQLSERVER' if sql_instance_name == 'MSSQLSERVER' else 'MSSQL$' + sql_instance_name }}"
+        state: stopped
+      when:
+        - sql_service.exists is defined
+        - sql_service.exists
+
+
+    - name: Uninstall SQL Server Instance
+      ansible.windows.win_command: >
+        "{{ sql_setup_path }}"
+        /Q
+        /ACTION=UNINSTALL
+        /FEATURES=SQLENGINE
+        /INSTANCENAME={{ sql_instance_name }}
+        /IACCEPTSQLSERVERLICENSETERMS
+      register: uninstall_result
+      changed_when: uninstall_result.rc in [0,3010]
+      failed_when: uninstall_result.rc not in [0,3010]
+      check_mode: no
+
+
+    - name: Display uninstall result
+      ansible.builtin.debug:
+        var: uninstall_result
+
+
+    - name: Verify SQL Server service removed
+      ansible.windows.win_service:
+        name: "{{ 'MSSQLSERVER' if sql_instance_name == 'MSSQLSERVER' else 'MSSQL$' + sql_instance_name }}"
+      register: service_check
+      failed_when: false
+
+
+    - name: Display service status
+      ansible.builtin.debug:
+        var: service_check
