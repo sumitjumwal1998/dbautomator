@@ -1,0 +1,57 @@
+---
+- name: Change SQL Server Database Owner
+  hosts: mssql
+  gather_facts: false
+  serial: 1
+
+  vars:
+    databases: "{{ lookup('env', 'DATABASES') }}"
+    new_owner: "{{ lookup('env', 'NEW_OWNER') }}"
+
+  tasks:
+
+    - name: Display databases to be updated
+      ansible.builtin.debug:
+        msg:
+          - "Databases    : {{ databases }}"
+          - "New Owner    : {{ new_owner }}"
+
+    - name: Change database owner
+      ansible.windows.win_shell: |
+        $Databases = "{{ databases }}".Split(',')
+
+        foreach ($db in $Databases)
+        {
+            $db = $db.Trim()
+
+            sqlcmd -E -Q "ALTER AUTHORIZATION ON DATABASE::[$db] TO [{{ new_owner }}]"
+        }
+      register: change_owner_result
+      changed_when: true
+      check_mode: no
+
+    - name: Display command output
+      ansible.builtin.debug:
+        var: change_owner_result.stdout_lines
+
+    - name: Verify database owner
+      ansible.windows.win_shell: |
+        $Databases = "{{ databases }}".Split(',')
+
+        foreach ($db in $Databases)
+        {
+            sqlcmd -E `
+                   -Q "SET NOCOUNT ON;
+                       SELECT
+                           DB_NAME(owner_sid) AS OwnerName
+                       FROM sys.databases
+                       WHERE name='$db';"
+        }
+      register: verify_owner
+      changed_when: false
+      failed_when: false
+      check_mode: no
+
+    - name: Display verification
+      ansible.builtin.debug:
+        var: verify_owner.stdout_lines
