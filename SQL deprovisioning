@@ -1,12 +1,12 @@
 ---
-- name: Uninstall SQL Server 2019
+- name: Uninstall SQL Server 2019 using ConfigurationFile.ini
   hosts: mssql
   gather_facts: false
   serial: 1
 
   vars:
     sql_setup_path: "{{ lookup('env', 'SQL_SETUP_PATH') }}"
-    sql_instance_name: "{{ lookup('env', 'SQL_INSTANCE_NAME') }}"
+    sql_configuration_file: "{{ lookup('env', 'SQL_CONFIGURATION_FILE') }}"
 
   tasks:
 
@@ -21,29 +21,22 @@
       when: not setup_file.stat.exists
 
 
-    - name: Check SQL Server service
-      ansible.windows.win_service:
-        name: "{{ 'MSSQLSERVER' if sql_instance_name == 'MSSQLSERVER' else 'MSSQL$' + sql_instance_name }}"
-      register: sql_service
-      failed_when: false
+    - name: Verify uninstall configuration file exists
+      ansible.windows.win_stat:
+        path: "{{ sql_configuration_file }}"
+      register: config_file
+
+    - name: Fail if configuration file is missing
+      ansible.builtin.fail:
+        msg: "SQL Server uninstall configuration file not found: {{ sql_configuration_file }}"
+      when: not config_file.stat.exists
 
 
-    - name: Stop SQL Server service
-      ansible.windows.win_service:
-        name: "{{ 'MSSQLSERVER' if sql_instance_name == 'MSSQLSERVER' else 'MSSQL$' + sql_instance_name }}"
-        state: stopped
-      when:
-        - sql_service.exists is defined
-        - sql_service.exists
-
-
-    - name: Uninstall SQL Server Instance
+    - name: Uninstall SQL Server
       ansible.windows.win_command: >
         "{{ sql_setup_path }}"
+        /ConfigurationFile="{{ sql_configuration_file }}"
         /Q
-        /ACTION=UNINSTALL
-        /FEATURES=SQLENGINE
-        /INSTANCENAME={{ sql_instance_name }}
         /IACCEPTSQLSERVERLICENSETERMS
       register: uninstall_result
       changed_when: uninstall_result.rc in [0,3010]
@@ -57,12 +50,14 @@
 
 
     - name: Verify SQL Server service removed
-      ansible.windows.win_service:
-        name: "{{ 'MSSQLSERVER' if sql_instance_name == 'MSSQLSERVER' else 'MSSQL$' + sql_instance_name }}"
-      register: service_check
+      ansible.windows.win_shell: |
+        Get-Service -Name MSSQL* -ErrorAction SilentlyContinue
+      register: sql_service_check
+      changed_when: false
       failed_when: false
+      check_mode: no
 
 
-    - name: Display service status
+    - name: Display remaining SQL services
       ansible.builtin.debug:
-        var: service_check
+        var: sql_service_check.stdout_lines
