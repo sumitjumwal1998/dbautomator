@@ -1,0 +1,22 @@
+---
+- name: Patch SQL Server 2019
+  hosts: mssql
+  gather_facts: false
+  serial: 1
+  roles:
+    - sql_patch
+    - sql_validation
+---
+patch_location: "{{ lookup('env','PATCH_LOCATION') }}"
+patch_file: "{{ lookup('env','PATCH_FILE') }}"
+sql_service: "{{ lookup('env','SQL_SERVICE') }}"
+---
+- name: Install SQL Server CU
+  ansible.windows.win_command: >
+      "{{ patch_location }}\\{{ patch_file }}"
+      /quiet
+      /action=patch
+      /IAcceptSQLServerLicenseTerms
+  register: install
+  changed_when: install.rc in [0,3010]
+  failed_when: install.rc not in [0,3010]
