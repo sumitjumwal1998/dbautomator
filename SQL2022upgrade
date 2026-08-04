@@ -71,3 +71,6 @@
     - name: Display SQL Server version
       ansible.builtin.debug:
         var: sql_version.stdout_lines
+    - name: Show a popup-like message
+      ansible.builtin.debug:
+        msg: "⚠️  Servers are upgraded successfully!
