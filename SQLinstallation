@@ -1,8 +1,5 @@
 ---
 - name: Install SQL Server 2019 using ConfigurationFile.ini
-  become: yes
-  become_method: runas
-  become_user: Administrator
   hosts: mssql
   gather_facts: false
   serial: 1
@@ -11,12 +8,7 @@
     sql_setup_path: "{{ lookup('env', 'SQL_SETUP_PATH') }}"
     sql_configuration_file: "{{ lookup('env', 'SQL_CONFIGURATION_FILE') }}"
 
-  tasks:
-    - name: Check current user
-      ansible.windows.win_shell: whoami
-      register: whoami_result
-    - debug:
-        var: whoami_result.stdout
+
     - name: Verify SQL Server setup exists
       ansible.windows.win_stat:
         path: "{{ sql_setup_path }}"
