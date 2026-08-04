@@ -1,0 +1,73 @@
+---
+- name: Upgrade SQL Server 2019 to SQL Server 2022
+  hosts: mssql
+  gather_facts: false
+  serial: 1
+
+  vars:
+    sql2022_setup_path: "{{ lookup('env', 'SQL2022_SETUP_PATH') }}"
+    sql_upgrade_config_file: "{{ lookup('env', 'SQL_UPGRADE_CONFIG_FILE') }}"
+
+  tasks:
+
+    - name: Verify SQL Server 2022 setup exists
+      ansible.windows.win_stat:
+        path: "{{ sql2022_setup_path }}"
+      register: setup_file
+
+
+    - name: Fail if SQL Server 2022 setup is missing
+      ansible.builtin.fail:
+        msg: "SQL Server 2022 setup.exe not found: {{ sql2022_setup_path }}"
+      when: not setup_file.stat.exists
+
+
+    - name: Verify upgrade configuration file exists
+      ansible.windows.win_stat:
+        path: "{{ sql_upgrade_config_file }}"
+      register: config_file
+
+
+    - name: Fail if upgrade configuration file is missing
+      ansible.builtin.fail:
+        msg: "SQL Server upgrade configuration file not found: {{ sql_upgrade_config_file }}"
+      when: not config_file.stat.exists
+
+
+    - name: Start SQL Server 2022 upgrade
+      ansible.windows.win_command: >
+        "{{ sql2022_setup_path }}"
+        /ConfigurationFile="{{ sql_upgrade_config_file }}"
+        /IACCEPTSQLSERVERLICENSETERMS
+      register: upgrade_result
+      changed_when: upgrade_result.rc in [0,3010]
+      failed_when: upgrade_result.rc not in [0,3010]
+      check_mode: no
+
+
+    - name: Display SQL upgrade result
+      ansible.builtin.debug:
+        var: upgrade_result
+
+
+    - name: Wait for SQL Server service
+      ansible.windows.win_service:
+        name: MSSQLSERVER
+      register: sql_service
+      until: sql_service.state == "running"
+      retries: 60
+      delay: 30
+
+
+    - name: Verify SQL Server version after upgrade
+      ansible.windows.win_shell: |
+        sqlcmd -Q "SET NOCOUNT ON; SELECT @@VERSION;"
+      register: sql_version
+      changed_when: false
+      failed_when: false
+      check_mode: no
+
+
+    - name: Display SQL Server version
+      ansible.builtin.debug:
+        var: sql_version.stdout_lines
