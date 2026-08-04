@@ -24,7 +24,7 @@
         {
             $db = $db.Trim()
 
-            sqlcmd -E -Q "ALTER AUTHORIZATION ON DATABASE::[$db] TO [{{ new_owner }}]"
+            sqlcmd -E -S localhost\HCL -Q "ALTER AUTHORIZATION ON DATABASE::[$db] TO [{{ new_owner }}]"
         }
       register: change_owner_result
       changed_when: true
@@ -40,7 +40,7 @@
 
         foreach ($db in $Databases)
         {
-            sqlcmd -E `
+            sqlcmd -E -S localhost\HCL`
                    -Q "SET NOCOUNT ON;
                        SELECT
                            DB_NAME(owner_sid) AS OwnerName
