@@ -55,3 +55,6 @@
     - name: Display verification
       ansible.builtin.debug:
         var: verify_owner.stdout_lines
+    - name: Show a popup-like message
+      ansible.builtin.debug:
+        msg: "⚠️  Database owner Changed successfully!
