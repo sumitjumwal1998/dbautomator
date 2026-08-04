@@ -101,6 +101,7 @@
       ansible.windows.win_command: >
         "{{ sql_setup_path }}"
         /ConfigurationFile="{{ sql_configuration_file }}"
+        /Q
         /UpdateEnabled=False
         /IACCEPTSQLSERVERLICENSETERMS
       register: sql_install_result
