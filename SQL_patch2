@@ -3,36 +3,42 @@
   hosts: mssql
   gather_facts: false
   serial: 1
-  roles:
-    - sql_patch
-    - sql_validation
----
-patch_location: "{{ lookup('env','PATCH_LOCATION') }}"
-patch_file: "{{ lookup('env','PATCH_FILE') }}"
-sql_service: "{{ lookup('env','SQL_SERVICE') }}"
----
-- name: Install SQL Server CU
-  ansible.windows.win_command: >
-      "{{ patch_location }}\\{{ patch_file }}"
-      /quiet
-      /action=patch
-      /IAcceptSQLServerLicenseTerms
-  register: install
-  changed_when: install.rc in [0,3010]
-  failed_when: install.rc not in [0,3010]
 
----
+  vars:
+    patch_location: "{{ lookup('env', 'PATCH_LOCATION') }}"
+    patch_file: "{{ lookup('env', 'PATCH_FILE') }}"
+    sql_service: "{{ lookup('env', 'SQL_SERVICE') }}"
 
-- name: Wait for SQL Service
-  ansible.windows.win_service:
-      name: "{{ sql_service }}"
-  register: svc
-  until: svc.state == "running"
-  retries: 30
-  delay: 20
-- name: Verify Version
-  ansible.windows.win_shell: |
-      sqlcmd -Q "SELECT @@VERSION"
-  register: version
-- debug:
-      var: version.stdout
+  tasks:
+
+    - name: Install SQL Server CU
+      ansible.windows.win_command: >
+        "{{ patch_location }}\{{ patch_file }}"
+        /quiet
+        /action=patch
+        /IAcceptSQLServerLicenseTerms
+      register: install_result
+      changed_when: install_result.rc in [0, 3010]
+      failed_when: install_result.rc not in [0, 3010]
+
+    - name: Reboot if required
+      ansible.windows.win_reboot:
+        reboot_timeout: 3600
+      when: install_result.rc == 3010
+
+    - name: Wait for SQL Server service
+      ansible.windows.win_service:
+        name: "{{ sql_service }}"
+      register: svc
+      until: svc.state == "running"
+      retries: 30
+      delay: 20
+
+    - name: Verify SQL Server Version
+      ansible.windows.win_shell: |
+        sqlcmd -Q "SET NOCOUNT ON; SELECT @@VERSION;"
+      register: sql_version
+
+    - name: Display SQL Version
+      ansible.builtin.debug:
+        msg: "{{ sql_version.stdout }}"
