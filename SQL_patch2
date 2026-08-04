@@ -1,5 +1,5 @@
 ---
-- name: Patch SQL Server 2019
+- name: Patch SQL Server 2019 CU
   hosts: mssql
   gather_facts: false
   serial: 1
@@ -11,34 +11,48 @@
 
   tasks:
 
-    - name: Install SQL Server CU
+    - name: Verify SQL patch file exists
+      ansible.windows.win_stat:
+        path: "{{ patch_location }}\\{{ patch_file }}"
+      register: patch_file_check
+
+    - name: Fail if patch file is missing
+      ansible.builtin.fail:
+        msg: "SQL Server CU patch file not found: {{ patch_location }}\\{{ patch_file }}"
+      when: not patch_file_check.stat.exists
+
+
+    - name: Install SQL Server 2019 CU
       ansible.windows.win_command: >
-        "{{ patch_location }}\{{ patch_file }}"
+        "{{ patch_location }}\\{{ patch_file }}"
         /quiet
         /action=patch
         /IAcceptSQLServerLicenseTerms
       register: install_result
-      changed_when: install_result.rc in [0, 3010]
-      failed_when: install_result.rc not in [0, 3010]
+      changed_when: install_result.rc == 0
+      failed_when: install_result.rc not in [0,3010]
 
-    - name: Reboot if required
-      ansible.windows.win_reboot:
-        reboot_timeout: 3600
-      when: install_result.rc == 3010
+
+    - name: Display SQL patch installation result
+      ansible.builtin.debug:
+        var: install_result
+
 
     - name: Wait for SQL Server service
       ansible.windows.win_service:
         name: "{{ sql_service }}"
-      register: svc
-      until: svc.state == "running"
+      register: sql_service_status
+      until: sql_service_status.state == "running"
       retries: 30
       delay: 20
 
-    - name: Verify SQL Server Version
+
+    - name: Verify SQL Server version after patch
       ansible.windows.win_shell: |
         sqlcmd -Q "SET NOCOUNT ON; SELECT @@VERSION;"
       register: sql_version
 
-    - name: Display SQL Version
+
+    - name: Display SQL Server version
       ansible.builtin.debug:
         msg: "{{ sql_version.stdout }}"
