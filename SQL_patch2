@@ -43,7 +43,7 @@
 
     - name: Wait for SQL Server service
       ansible.windows.win_service:
-        name: MSSQLSERVER
+        name: "MSSQL${{ InstanceName }}"
       register: sql_service
       until: sql_service.state == "running"
       retries: 30
@@ -52,7 +52,7 @@
 
     - name: Verify SQL Server version after CU patch
       ansible.windows.win_shell: |
-        sqlcmd -Q "SET NOCOUNT ON; SELECT @@VERSION;"
+        sqlcmd -E -S "localhost\{{ InstanceName }}" -Q "SET NOCOUNT ON; SELECT @@VERSION;"
       register: sql_version
       changed_when: false
       failed_when: false
