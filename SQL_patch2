@@ -7,6 +7,7 @@
   vars:
     patch_location: "{{ lookup('env', 'PATCH_LOCATION') }}"
     patch_file: "{{ lookup('env', 'PATCH_FILE') }}"
+    InstanceName: "{{ InstanceName }}"
 
   tasks:
 
@@ -27,7 +28,7 @@
         "{{ patch_location }}\\{{ patch_file }}"
         /quiet
         /action=patch
-        /InstanceName=MSSQLSERVER
+        /InstanceName="{{ InstanceName }}"
         /IAcceptSQLServerLicenseTerms
       register: cu_install_result
       changed_when: cu_install_result.rc in [0,3010]
