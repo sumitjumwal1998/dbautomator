@@ -1,0 +1,74 @@
+---
+- name: Patch SQL Server 2019 CU
+  hosts: mssql
+  gather_facts: false
+  serial: 1
+
+  vars:
+    patch_location: "{{ lookup('env', 'PATCH_LOCATION') }}"
+    patch_file: "{{ lookup('env', 'PATCH_FILE') }}"
+
+  tasks:
+
+    - name: Verify SQL CU patch file exists
+      ansible.windows.win_stat:
+        path: "{{ patch_location }}\\{{ patch_file }}"
+      register: patch_check
+
+
+    - name: Fail if CU patch file is missing
+      ansible.builtin.fail:
+        msg: "SQL CU patch file not found: {{ patch_location }}\\{{ patch_file }}"
+      when: not patch_check.stat.exists
+    
+  - name: Get SQL Server version before patch
+      ansible.windows.win_shell: |
+        sqlcmd -Q "SET NOCOUNT ON;
+        SELECT
+        CAST(SERVERPROPERTY('ProductVersion') AS VARCHAR(30)),
+        CAST(SERVERPROPERTY('ProductLevel') AS VARCHAR(20)),
+        CAST(SERVERPROPERTY('Edition') AS VARCHAR(100));"
+      register: before_patch
+      changed_when: false
+
+
+    - name: Install SQL Server CU
+      ansible.windows.win_command: >
+        "{{ patch_location }}\\{{ patch_file }}"
+        /quiet
+        /action=patch
+        /InstanceName=MSSQLSERVER
+        /IAcceptSQLServerLicenseTerms
+      register: cu_install_result
+      changed_when: cu_install_result.rc in [0,3010]
+      failed_when: cu_install_result.rc not in [0,3010]
+      check_mode: no
+
+
+    - name: Display CU installation result
+      ansible.builtin.debug:
+        var: cu_install_result
+
+
+    - name: Wait for SQL Server service
+      ansible.windows.win_service:
+        name: MSSQLSERVER
+      register: sql_service
+      until: sql_service.state == "running"
+      retries: 30
+      delay: 20
+
+
+    - name: Verify SQL Server version after CU patch
+      ansible.windows.win_shell: |
+        sqlcmd -Q "SET NOCOUNT ON; SELECT @@VERSION;"
+      register: sql_version
+      changed_when: false
+      failed_when: false
+      check_mode: no
+
+
+    - name: Display SQL Server version
+      ansible.builtin.debug:
+        msg: "{{ sql_version.stdout }}"
+      when: sql_version.stdout is defined
