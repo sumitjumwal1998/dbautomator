@@ -12,8 +12,7 @@
       
      - name: Drop SQL Login
        win_shell: |
-               $SQLLogin= "DROP LOGIN {{ sql_login }}"
-               Invoke-Sqlcmd -S localhost\HCL -E -Query $SQLLogin
+               sqlcmd -E -S localhost\HCL -Q "DROP LOGIN {{ login_to_drop }}"
 
 
 
