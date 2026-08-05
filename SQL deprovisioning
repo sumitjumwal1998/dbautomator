@@ -7,6 +7,7 @@
   vars:
     sql_setup_path: "{{ lookup('env', 'SQL_SETUP_PATH') }}"
     sql_configuration_file: "{{ lookup('env', 'SQL_CONFIGURATION_FILE') }}"
+    InstanceName: "{{ InstanceName }}"
 
   tasks:
 
@@ -36,6 +37,7 @@
       ansible.windows.win_command: >
         "{{ sql_setup_path }}"
         /ConfigurationFile="{{ sql_configuration_file }}"
+        /INSTANCENAME="{{ InstanceName }}"
         /Q
         /IACCEPTSQLSERVERLICENSETERMS
       register: uninstall_result
