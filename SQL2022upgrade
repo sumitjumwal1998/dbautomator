@@ -70,4 +70,3 @@
     - name: Show upgrade success message
       ansible.builtin.debug:
         msg: "Servers are upgraded successfully!"
-```
