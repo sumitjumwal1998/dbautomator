@@ -7,6 +7,7 @@
   vars:
     sql_setup_path: "{{ lookup('env', 'SQL_SETUP_PATH') }}"
     sql_configuration_file: "{{ lookup('env', 'SQL_CONFIGURATION_FILE') }}"
+    INSTANCENAME: "{{ INSTANCENAME }}"
 
   tasks:
 
@@ -37,6 +38,7 @@
         "{{ sql_setup_path }}"
         /ConfigurationFile="{{ sql_configuration_file }}"
         /Q
+        /INSTANCENAME="{{ INSTANCENAME }}"
         /IACCEPTSQLSERVERLICENSETERMS
       register: uninstall_result
       changed_when: uninstall_result.rc in [0,3010]
